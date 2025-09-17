@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bit-A-Byte Solutions </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            overflow-x: hidden;
+        }
+        
+        .hero-section {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #CD853F 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .hero-content {
+            text-align: center;
+            z-index: 10;
+            max-width: 1200px;
+        }
+        
+        .main-title {
+            font-size: clamp(3rem, 8vw, 8rem);
+            font-weight: bold;
+            background: linear-gradient(45deg, #FF6B35, #F7931E, #FFD700, #FF1493, #8A2BE2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 1rem;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+        
+        .subtitle {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            color: #FFD700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            margin-bottom: 2rem;
+            letter-spacing: 2px;
+        }
+        
+        .description {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: #FFF8DC;
+            max-width: 600px;
+            margin: 0 auto 3rem;
+            line-height: 1.6;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+            border: none;
+            cursor: pointer;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(255, 107, 53, 0.4);
+            background: linear-gradient(45deg, #F7931E, #FFD700);
+        }
+        
+        .cta-button.secondary {
+            background: linear-gradient(45deg, #8A2BE2, #FF1493);
+        }
+        
+        .cta-button.secondary:hover {
+            background: linear-gradient(45deg, #FF1493, #8A2BE2);
+        }
+        
+        /* Scroll-triggered falling petals */
+        .falling-petals {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+        
+        .falling-petal {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            opacity: 0;
+            border-radius: 50% 10% 50% 10%;
+            animation: fall 4s linear forwards;
+            transform-origin: center;
+        }
+        
+        .petal-red { background: linear-gradient(45deg, #FF6B35, #DC143C); }
+        .petal-orange { background: linear-gradient(45deg, #F7931E, #FF8C00); }
+        .petal-purple { background: linear-gradient(45deg, #8A2BE2, #9370DB); }
+        .petal-pink { background: linear-gradient(45deg, #FF1493, #FF69B4); }
+        .petal-gold { background: linear-gradient(45deg, #FFD700, #FFA500); }
+        
+        .floating-petals {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .petal {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            border-radius: 50% 50% 50% 0;
+            animation: float 15s infinite linear;
+            opacity: 0.7;
+        }
+        
+        .petal:nth-child(2n) {
+            background: linear-gradient(45deg, #8A2BE2, #FF1493);
+            animation-delay: -5s;
+        }
+        
+        .petal:nth-child(3n) {
+            background: linear-gradient(45deg, #FFD700, #FF6B35);
+            animation-delay: -10s;
+        }
+        
+        .decorative-border {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90vmin;
+            height: 90vmin;
+            border: 3px solid rgba(255, 215, 0, 0.3);
+            border-radius: 50%;
+            animation: rotate 60s linear infinite;
+            z-index: 2;
+        }
+        
+        .decorative-border::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
+            border: 2px solid rgba(255, 107, 53, 0.2);
+            border-radius: 50%;
+            animation: rotate-reverse 45s linear infinite;
+        }
+        
+        .mandala-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vmin;
+            height: 80vmin;
+            background: radial-gradient(
+                circle,
+                rgba(255, 215, 0, 0.1) 0%,
+                rgba(255, 107, 53, 0.1) 25%,
+                rgba(138, 43, 226, 0.1) 50%,
+                rgba(255, 20, 147, 0.1) 75%,
+                transparent 100%
+            );
+            border-radius: 50%;
+            animation: pulse 8s ease-in-out infinite;
+            z-index: 1;
+        }
+        
+        .heritage-section {
+            background: linear-gradient(135deg, #1a0f0a 0%, #2d1b15 100%);
+            padding: 100px 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .heritage-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            color: #FFF8DC;
+        }
+        
+        .heritage-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            background: linear-gradient(45deg, #FF6B35, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+        }
+        
+        .heritage-text {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            text-align: justify;
+        }
+        
+        .heritage-highlights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .highlight-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .highlight-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 215, 0, 0.3);
+        }
+        
+        .highlight-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #F7931E, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .tools-section {
+            background: linear-gradient(135deg, #2C1810 0%, #3D2317 100%);
+            padding: 100px 20px;
+            text-align: center;
+        }
+        
+        .tools-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+        
+        .tool-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(255, 107, 53, 0.3);
+        }
+        
+        .tool-icon {
+            font-size: 4rem;
+            margin-bottom: 25px;
+            background: linear-gradient(45deg, #FF6B35, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .tool-title {
+            font-size: 2rem;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+        
+        .tool-description {
+            color: #FFF8DC;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .tool-features {
+            list-style: none;
+            text-align: left;
+            margin: 20px 0;
+        }
+        
+        .tool-features li {
+            color: #FFF8DC;
+            padding: 5px 0;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .tool-features li::before {
+            content: '✨';
+            position: absolute;
+            left: 0;
+        }
+        
+        .features-section {
+            background: linear-gradient(135deg, #2C1810 0%, #3D2317 100%);
+            padding: 100px 20px;
+            text-align: center;
+        }
+        
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 60px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(255, 107, 53, 0.3);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #FF6B35, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .feature-title {
+            font-size: 1.5rem;
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+        
+        .feature-description {
+            color: #FFF8DC;
+            line-height: 1.6;
+        }
+        
+        .section-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            background: linear-gradient(45deg, #FF6B35, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        
+        .section-subtitle {
+            color: #FFF8DC;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FFD700;
+            font-size: 2rem;
+            animation: bounce 2s infinite;
+            z-index: 10;
+        }
+        
+        /* Animations */
+        @keyframes glow {
+            0% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+            100% { text-shadow: 0 0 40px rgba(255, 107, 53, 0.8), 0 0 60px rgba(255, 20, 147, 0.6); }
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% { opacity: 0.7; }
+            90% { opacity: 0.7; }
+            100% {
+                transform: translateY(-20px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes fall {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px) rotate(0deg);
+            }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% {
+                opacity: 0;
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+        
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        @keyframes rotate-reverse {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.6;
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="falling-petals" id="falling-petals"></div>
+    
+    <section class="hero-section">
+        <div class="floating-petals"></div>
+        <div class="mandala-bg"></div>
+        <div class="decorative-border"></div>
+        
+        <div class="hero-content">
+            <h1 class="main-title">KOLAM</h1>
+            <h2 class="subtitle">ShanthiSridharan</h2>
+            <p class="description">
+                Experience the timeless beauty of traditional South Indian floor art. 
+                Where sacred geometry meets vibrant colors, creating patterns that celebrate 
+                culture, spirituality, and artistic excellence.
+            </p>
+            <div class="cta-buttons">
+                <a href="#tools" class="cta-button">Explore Tools</a>
+                <a href="#heritage" class="cta-button secondary">Learn Heritage</a>
+            </div>
+        </div>
+        
+        <div class="scroll-indicator">↓</div>
+    </section>
+
+    <section id="heritage" class="heritage-section">
+        <div class="heritage-content">
+            <h2 class="heritage-title">Ancient Wisdom, Living Art</h2>
+            <p class="heritage-text">
+                Kolam, a sacred art form rooted in Tamil Nadu's rich cultural heritage, represents more than decorative floor patterns. Dating back over 5,000 years, this ancient practice embodies mathematical precision, spiritual devotion, and community tradition. Each morning, women across South India create these intricate designs using rice flour, connecting earth and sky, welcoming prosperity while feeding countless creatures. The geometric patterns reflect cosmic harmony, with dots representing stars and lines symbolizing the interconnected nature of life itself.
+            </p>
+            
+            <div class="heritage-highlights">
+                <div class="highlight-item">
+                    <div class="highlight-icon">🕉️</div>
+                    <h3 style="color: #FFD700; margin-bottom: 15px;">Sacred Geometry</h3>
+                    <p>Mathematical precision meets spiritual symbolism in every curve and line.</p>
+                </div>
+                <div class="highlight-item">
+                    <div class="highlight-icon">🌾</div>
+                    <h3 style="color: #FFD700; margin-bottom: 15px;">Natural Materials</h3>
+                    <p>Rice flour and natural pigments creating eco-friendly, biodegradable art.</p>
+                </div>
+                <div class="highlight-item">
+                    <div class="highlight-icon">🏠</div>
+                    <h3 style="color: #FFD700; margin-bottom: 15px;">Daily Ritual</h3>
+                    <p>Morning practice that purifies homes and invites divine blessings.</p>
+                </div>
+                <div class="highlight-item">
+                    <div class="highlight-icon">👥</div>
+                    <h3 style="color: #FFD700; margin-bottom: 15px;">Cultural Legacy</h3>
+                    <p>Generations of knowledge passed through mothers to daughters.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tools" class="tools-section">
+        <h2 class="section-title">Digital Kolam Tools</h2>
+        <p class="section-subtitle">
+            Bridging ancient tradition with modern technology to create, analyze, and preserve this beautiful art form.
+        </p>
+        
+        <div class="tools-grid">
+            <div class="tool-card">
+                <div class="tool-icon">🔍</div>
+                <h3 class="tool-title">Kolam Analyzer</h3>
+                <p class="tool-description">
+                    Upload your Kolam images for detailed analysis of patterns, symmetry, and traditional authenticity.
+                </p>
+                <ul class="tool-features">
+                    <li>Pattern recognition and classification</li>
+                    <li>Symmetry and geometry analysis</li>
+                    <li>Cultural significance insights</li>
+                    <li>Traditional vs modern style comparison</li>
+                    <li>Color palette and composition study</li>
+                </ul>
+                <button class="cta-button" onclick="openAnalyzer()">Launch Analyzer</button>
+            </div>
+            
+            <div class="tool-card">
+                <div class="tool-icon">✨</div>
+                <h3 class="tool-title">Kolam Generator</h3>
+                <p class="tool-description">
+                    Create stunning Kolam designs using AI-powered pattern generation and traditional motifs.
+                </p>
+                <ul class="tool-features">
+                    <li>AI-powered pattern creation</li>
+                    <li>Traditional motif library</li>
+                    <li>Customizable colors and sizes</li>
+                    <li>Festival-specific designs</li>
+                    <li>Step-by-step drawing guides</li>
+                </ul>
+                <button class="cta-button" onclick="openGenerator()">Start Creating</button>
+            </div>
+        </div>
+    </section>
+    
+    <section id="features" class="features-section">
+        <h2 class="section-title">Sacred Art Forms</h2>
+        <p class="section-subtitle">
+            Discover the rich tradition of Kolam - where every line tells a story, 
+            every pattern holds meaning, and every color celebrates life.
+        </p>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🌸</div>
+                <h3 class="feature-title">Traditional Patterns</h3>
+                <p class="feature-description">
+                    Authentic designs passed down through generations, each carrying 
+                    deep cultural significance and spiritual meaning.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3 class="feature-title">Vibrant Colors</h3>
+                <p class="feature-description">
+                    Rich hues that bring life to sacred geometry, using natural 
+                    and traditional pigments in stunning combinations.
+                </p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🕯️</div>
+                <h3 class="feature-title">Festival Celebrations</h3>
+                <p class="feature-description">
+                    Special designs for Diwali, Pongal, and other auspicious occasions, 
+                    bringing prosperity and joy to homes and hearts.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        let lastScrollY = 0;
+        let petalCount = 0;
+        
+        // Create floating petals for hero section
+        const petalsContainer = document.querySelector('.floating-petals');
+        for (let i = 0; i < 15; i++) {
+            const petal = document.createElement('div');
+            petal.className = 'petal';
+            petal.style.left = Math.random() * 100 + '%';
+            petal.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            petal.style.animationDelay = Math.random() * 15 + 's';
+            petalsContainer.appendChild(petal);
+        }
+        
+        // Create falling petals on scroll
+        function createFallingPetal() {
+            if (petalCount > 20) return; // Limit active petals
+            
+            const fallingPetalsContainer = document.getElementById('falling-petals');
+            const petal = document.createElement('div');
+            
+            const petalTypes = ['petal-red', 'petal-orange', 'petal-purple', 'petal-pink', 'petal-gold'];
+            const randomType = petalTypes[Math.floor(Math.random() * petalTypes.length)];
+            
+            petal.className = `falling-petal ${randomType}`;
+            petal.style.left = Math.random() * 100 + '%';
+            petal.style.animationDuration = (Math.random() * 2 + 3) + 's';
+            
+            fallingPetalsContainer.appendChild(petal);
+            petalCount++;
+            
+            // Remove petal after animation
+            setTimeout(() => {
+                if (petal.parentNode) {
+                    petal.parentNode.removeChild(petal);
+                    petalCount--;
+                }
+            }, 5000);
+        }
+        
+        // Handle scroll events
+        window.addEventListener('scroll', function() {
+            const currentScrollY = window.pageYOffset;
+            const scrollDelta = Math.abs(currentScrollY - lastScrollY);
+            
+            // Create petals based on scroll intensity
+            if (scrollDelta > 10) {
+                const petalIntensity = Math.min(Math.floor(scrollDelta / 50), 3);
+                for (let i = 0; i < petalIntensity; i++) {
+                    setTimeout(() => createFallingPetal(), i * 100);
+                }
+            }
+            
+            lastScrollY = currentScrollY;
+            
+            // Parallax effect
+            const mandala = document.querySelector('.mandala-bg');
+            const border = document.querySelector('.decorative-border');
+            
+            if (mandala && border) {
+                mandala.style.transform = `translate(-50%, -50%) rotate(${currentScrollY * 0.1}deg)`;
+                border.style.transform = `translate(-50%, -50%) rotate(${currentScrollY * -0.05}deg)`;
+            }
+        });
+        
+        // Smooth scrolling for buttons
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Tool functions
+        function openAnalyzer() {
+            // Create modal or redirect to analyzer page
+            alert('🔍 Kolam Analyzer\n\nFeatures coming soon:\n• Upload and analyze your Kolam patterns\n• AI-powered pattern recognition\n• Traditional authenticity scoring\n• Detailed geometry analysis');
+        }
+        
+        function openGenerator() {
+            // Create modal or redirect to generator page
+            alert('✨ Kolam Generator\n\nFeatures coming soon:\n• AI-powered design creation\n• Traditional pattern library\n• Custom color palettes\n• Step-by-step tutorials');
+        }
+        
+        // Create additional falling petals periodically while scrolling
+        let scrollTimeout;
+        window.addEventListener('scroll', function() {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                if (Math.random() > 0.7) {
+                    createFallingPetal();
+                }
+            }, 200);
+        });
+    </script>
+</body>
+</html>
