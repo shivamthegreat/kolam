@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bit-A-Byte Solutions </title>
+    <title>Bit-A-Byte Solutions - 3D Kolam Experience</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -14,6 +15,7 @@
         body {
             font-family: 'Georgia', serif;
             overflow-x: hidden;
+            background: #000;
         }
         
         .hero-section {
@@ -26,10 +28,26 @@
             padding: 20px;
         }
         
+        #kolam3d {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 60vh;
+            max-width: 800px;
+            z-index: 5;
+            opacity: 0.9;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 20px;
+            background: radial-gradient(circle, rgba(255,215,0,0.05) 0%, transparent 70%);
+        }
+        
         .hero-content {
             text-align: center;
             z-index: 10;
             max-width: 1200px;
+            position: relative;
         }
         
         .main-title {
@@ -42,6 +60,7 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             margin-bottom: 1rem;
             animation: glow 3s ease-in-out infinite alternate;
+            transform: perspective(1000px) rotateX(10deg);
         }
         
         .subtitle {
@@ -50,6 +69,7 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
             margin-bottom: 2rem;
             letter-spacing: 2px;
+            transform: perspective(800px) rotateY(-5deg);
         }
         
         .description {
@@ -59,6 +79,11 @@
             margin: 0 auto 3rem;
             line-height: 1.6;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,215,0,0.3);
         }
         
         .cta-buttons {
@@ -66,6 +91,7 @@
             gap: 20px;
             justify-content: center;
             flex-wrap: wrap;
+            margin-bottom: 40px;
         }
         
         .cta-button {
@@ -83,11 +109,29 @@
             box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
             border: none;
             cursor: pointer;
+            transform: translateZ(0);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+        
+        .cta-button:hover::before {
+            left: 100%;
         }
         
         .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(255, 107, 53, 0.4);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(255, 107, 53, 0.5);
             background: linear-gradient(45deg, #F7931E, #FFD700);
         }
         
@@ -99,7 +143,215 @@
             background: linear-gradient(45deg, #FF1493, #8A2BE2);
         }
         
-        /* Scroll-triggered falling petals */
+        /* Interactive Kolam Tools */
+        .kolam-tools {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .tool-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tool-btn::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.6s ease;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .tool-btn:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .tool-btn:hover {
+            transform: scale(1.2) rotate(10deg);
+            box-shadow: 0 15px 35px rgba(255,107,53,0.5);
+        }
+        
+        .draw-btn {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+        }
+        
+        .upload-btn {
+            background: linear-gradient(45deg, #8A2BE2, #FF1493);
+        }
+        
+        .generate-btn {
+            background: linear-gradient(45deg, #32CD32, #00CED1);
+        }
+        
+        /* Enhanced Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(20px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, rgba(139,69,19,0.9) 0%, rgba(160,82,45,0.9) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,215,0,0.3);
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            color: #FFD700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .close:hover {
+            transform: scale(1.2) rotate(90deg);
+            color: #FF6B35;
+        }
+        
+        /* Drawing Canvas */
+        #drawingCanvas {
+            border: 3px solid #FFD700;
+            border-radius: 15px;
+            cursor: crosshair;
+            display: block;
+            margin: 20px auto;
+            box-shadow: 0 15px 35px rgba(255,215,0,0.3);
+        }
+        
+        .canvas-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255,107,53,0.3);
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(255,107,53,0.5);
+        }
+        
+        /* Color Palette */
+        .color-palette {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .color-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .color-btn:hover, .color-btn.active {
+            transform: scale(1.2);
+            border-color: #FFD700;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        /* File Upload Area */
+        .upload-area {
+            border: 3px dashed #FFD700;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            color: #FFD700;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,215,0,0.1);
+        }
+        
+        .upload-area:hover {
+            background: rgba(255,215,0,0.2);
+            border-color: #FF6B35;
+            color: #FF6B35;
+            transform: scale(1.02);
+        }
+        
+        .upload-area.dragover {
+            background: rgba(255,107,53,0.2);
+            border-color: #FF6B35;
+            transform: scale(1.05);
+        }
+        
+        /* Text Generation */
+        .text-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+            color: #FFD700;
+            font-size: 16px;
+            margin: 15px 0;
+        }
+        
+        .text-input::placeholder {
+            color: rgba(255,215,0,0.7);
+        }
+        
+        /* Floating petals with 3D effect */
         .falling-petals {
             position: fixed;
             top: 0;
@@ -117,87 +369,29 @@
             height: 15px;
             opacity: 0;
             border-radius: 50% 10% 50% 10%;
-            animation: fall 4s linear forwards;
+            animation: fall3d 4s linear forwards;
             transform-origin: center;
         }
         
-        .petal-red { background: linear-gradient(45deg, #FF6B35, #DC143C); }
-        .petal-orange { background: linear-gradient(45deg, #F7931E, #FF8C00); }
-        .petal-purple { background: linear-gradient(45deg, #8A2BE2, #9370DB); }
-        .petal-pink { background: linear-gradient(45deg, #FF1493, #FF69B4); }
-        .petal-gold { background: linear-gradient(45deg, #FFD700, #FFA500); }
-        
-        .floating-petals {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 1;
+        .petal-red { 
+            background: linear-gradient(45deg, #FF6B35, #DC143C);
+            box-shadow: 0 5px 15px rgba(255,107,53,0.5);
         }
-        
-        .petal {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: linear-gradient(45deg, #FF6B35, #F7931E);
-            border-radius: 50% 50% 50% 0;
-            animation: float 15s infinite linear;
-            opacity: 0.7;
+        .petal-orange { 
+            background: linear-gradient(45deg, #F7931E, #FF8C00);
+            box-shadow: 0 5px 15px rgba(247,147,30,0.5);
         }
-        
-        .petal:nth-child(2n) {
-            background: linear-gradient(45deg, #8A2BE2, #FF1493);
-            animation-delay: -5s;
+        .petal-purple { 
+            background: linear-gradient(45deg, #8A2BE2, #9370DB);
+            box-shadow: 0 5px 15px rgba(138,43,226,0.5);
         }
-        
-        .petal:nth-child(3n) {
-            background: linear-gradient(45deg, #FFD700, #FF6B35);
-            animation-delay: -10s;
+        .petal-pink { 
+            background: linear-gradient(45deg, #FF1493, #FF69B4);
+            box-shadow: 0 5px 15px rgba(255,20,147,0.5);
         }
-        
-        .decorative-border {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90vmin;
-            height: 90vmin;
-            border: 3px solid rgba(255, 215, 0, 0.3);
-            border-radius: 50%;
-            animation: rotate 60s linear infinite;
-            z-index: 2;
-        }
-        
-        .decorative-border::before {
-            content: '';
-            position: absolute;
-            top: -15px;
-            left: -15px;
-            right: -15px;
-            bottom: -15px;
-            border: 2px solid rgba(255, 107, 53, 0.2);
-            border-radius: 50%;
-            animation: rotate-reverse 45s linear infinite;
-        }
-        
-        .mandala-bg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80vmin;
-            height: 80vmin;
-            background: radial-gradient(
-                circle,
-                rgba(255, 215, 0, 0.1) 0%,
-                rgba(255, 107, 53, 0.1) 25%,
-                rgba(138, 43, 226, 0.1) 50%,
-                rgba(255, 20, 147, 0.1) 75%,
-                transparent 100%
-            );
-            border-radius: 50%;
-            animation: pulse 8s ease-in-out infinite;
-            z-index: 1;
+        .petal-gold { 
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            box-shadow: 0 5px 15px rgba(255,215,0,0.5);
         }
         
         .heritage-section {
@@ -205,12 +399,26 @@
             padding: 100px 20px;
             text-align: center;
             position: relative;
+            overflow: hidden;
+        }
+        
+        .heritage-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="kolam" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,215,0,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23kolam)"/></svg>');
+            opacity: 0.3;
         }
         
         .heritage-content {
             max-width: 1000px;
             margin: 0 auto;
             color: #FFF8DC;
+            position: relative;
+            z-index: 2;
         }
         
         .heritage-title {
@@ -219,6 +427,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 30px;
+            transform: perspective(1000px) rotateX(15deg);
         }
         
         .heritage-text {
@@ -226,6 +435,11 @@
             line-height: 1.8;
             margin-bottom: 40px;
             text-align: justify;
+            backdrop-filter: blur(5px);
+            background: rgba(255,255,255,0.05);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,215,0,0.1);
         }
         
         .heritage-highlights {
@@ -241,12 +455,15 @@
             border-radius: 15px;
             border: 1px solid rgba(255, 215, 0, 0.1);
             transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            transform: perspective(1000px) rotateY(0deg);
         }
         
         .highlight-item:hover {
-            transform: translateY(-5px);
+            transform: perspective(1000px) rotateY(10deg) translateY(-10px);
             background: rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 20px 40px rgba(255,107,53,0.3);
         }
         
         .highlight-icon {
@@ -255,12 +472,14 @@
             background: linear-gradient(45deg, #F7931E, #FFD700);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 5px 10px rgba(247,147,30,0.3));
         }
         
         .tools-section {
             background: linear-gradient(135deg, #2C1810 0%, #3D2317 100%);
             padding: 100px 20px;
             text-align: center;
+            position: relative;
         }
         
         .tools-grid {
@@ -276,16 +495,18 @@
             background: rgba(255, 255, 255, 0.1);
             padding: 40px 30px;
             border-radius: 20px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 215, 0, 0.2);
             transition: all 0.3s ease;
             height: 100%;
+            transform: perspective(1000px) rotateX(5deg);
         }
         
         .tool-card:hover {
-            transform: translateY(-10px);
+            transform: perspective(1000px) rotateX(-5deg) translateY(-15px) scale(1.02);
             background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 40px rgba(255, 107, 53, 0.3);
+            box-shadow: 0 25px 50px rgba(255, 107, 53, 0.4);
+            border-color: rgba(255, 215, 0, 0.4);
         }
         
         .tool-icon {
@@ -294,12 +515,14 @@
             background: linear-gradient(45deg, #FF6B35, #FFD700);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 5px 10px rgba(255,107,53,0.3));
         }
         
         .tool-title {
             font-size: 2rem;
             color: #FFD700;
             margin-bottom: 20px;
+            text-shadow: 0 3px 6px rgba(255,215,0,0.3);
         }
         
         .tool-description {
@@ -325,55 +548,7 @@
             content: '✨';
             position: absolute;
             left: 0;
-        }
-        
-        .features-section {
-            background: linear-gradient(135deg, #2C1810 0%, #3D2317 100%);
-            padding: 100px 20px;
-            text-align: center;
-        }
-        
-        .features-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-            margin-top: 60px;
-        }
-        
-        .feature-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 40px 20px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 40px rgba(255, 107, 53, 0.3);
-        }
-        
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            background: linear-gradient(45deg, #FF6B35, #FFD700);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .feature-title {
-            font-size: 1.5rem;
-            color: #FFD700;
-            margin-bottom: 15px;
-        }
-        
-        .feature-description {
-            color: #FFF8DC;
-            line-height: 1.6;
+            animation: sparkle 2s ease-in-out infinite;
         }
         
         .section-title {
@@ -382,6 +557,8 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 20px;
+            transform: perspective(1000px) rotateX(10deg);
+            filter: drop-shadow(0 5px 10px rgba(255,107,53,0.3));
         }
         
         .section-subtitle {
@@ -391,84 +568,84 @@
             margin: 0 auto;
         }
         
-        .scroll-indicator {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #FFD700;
-            font-size: 2rem;
-            animation: bounce 2s infinite;
-            z-index: 10;
-        }
-        
-        /* Animations */
+        /* Enhanced Animations */
         @keyframes glow {
-            0% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
-            100% { text-shadow: 0 0 40px rgba(255, 107, 53, 0.8), 0 0 60px rgba(255, 20, 147, 0.6); }
-        }
-        
-        @keyframes float {
-            0% {
-                transform: translateY(100vh) rotate(0deg);
-                opacity: 0;
+            0% { 
+                text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+                transform: perspective(1000px) rotateX(10deg) scale(1);
             }
-            10% { opacity: 0.7; }
-            90% { opacity: 0.7; }
-            100% {
-                transform: translateY(-20px) rotate(360deg);
-                opacity: 0;
+            100% { 
+                text-shadow: 0 0 40px rgba(255, 107, 53, 0.8), 0 0 60px rgba(255, 20, 147, 0.6);
+                transform: perspective(1000px) rotateX(10deg) scale(1.02);
             }
         }
         
-        @keyframes fall {
+        @keyframes fall3d {
             0% {
                 opacity: 0;
-                transform: translateY(-20px) rotate(0deg);
+                transform: translateY(-20px) translateZ(0px) rotateX(0deg) rotateY(0deg);
             }
             10% { opacity: 0.8; }
             90% { opacity: 0.8; }
             100% {
                 opacity: 0;
-                transform: translateY(100vh) rotate(720deg);
+                transform: translateY(100vh) translateZ(100px) rotateX(720deg) rotateY(360deg);
             }
         }
         
-        @keyframes rotate {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
+        @keyframes sparkle {
+            0%, 100% { 
+                transform: scale(1) rotate(0deg);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.2) rotate(180deg);
+                filter: brightness(1.5);
+            }
         }
         
-        @keyframes rotate-reverse {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(-360deg); }
-        }
-        
-        @keyframes pulse {
-            0%, 100% {
-                transform: translate(-50%, -50%) scale(1);
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            #kolam3d {
+                width: 100%;
+                height: 50vh;
                 opacity: 0.3;
             }
-            50% {
-                transform: translate(-50%, -50%) scale(1.1);
-                opacity: 0.6;
+            
+            .kolam-tools {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                top: auto;
+                transform: none;
+                flex-direction: row;
             }
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
-            40% { transform: translateX(-50%) translateY(-10px); }
-            60% { transform: translateX(-50%) translateY(-5px); }
+            
+            .tool-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+                margin: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="falling-petals" id="falling-petals"></div>
     
+    <!-- Interactive Kolam Tools -->
+    <div class="kolam-tools">
+        <button class="tool-btn draw-btn" onclick="openDrawTool()" title="Draw Kolam">🖊️</button>
+        <button class="tool-btn upload-btn" onclick="openUploadTool()" title="Upload Image">📁</button>
+        <button class="tool-btn generate-btn" onclick="openGenerateTool()" title="Generate from Text">✨</button>
+    </div>
+    
     <section class="hero-section">
-        <div class="floating-petals"></div>
-        <div class="mandala-bg"></div>
-        <div class="decorative-border"></div>
+        <canvas id="kolam3d"></canvas>
         
         <div class="hero-content">
             <h1 class="main-title">KOLAM</h1>
@@ -476,16 +653,84 @@
             <p class="description">
                 Experience the timeless beauty of traditional South Indian floor art. 
                 Where sacred geometry meets vibrant colors, creating patterns that celebrate 
-                culture, spirituality, and artistic excellence.
+                culture, spirituality, and artistic excellence in stunning 3D.
             </p>
             <div class="cta-buttons">
                 <a href="#tools" class="cta-button">Explore Tools</a>
                 <a href="#heritage" class="cta-button secondary">Learn Heritage</a>
             </div>
         </div>
-        
-        <div class="scroll-indicator">↓</div>
     </section>
+
+    <!-- Draw Tool Modal -->
+    <div id="drawModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('drawModal')">&times;</span>
+            <h2 style="color: #FFD700; text-align: center; margin-bottom: 20px;">🖊️ Draw Your Kolam</h2>
+            
+            <div class="color-palette">
+                <div class="color-btn active" style="background: #FF6B35;" data-color="#FF6B35"></div>
+                <div class="color-btn" style="background: #F7931E;" data-color="#F7931E"></div>
+                <div class="color-btn" style="background: #FFD700;" data-color="#FFD700"></div>
+                <div class="color-btn" style="background: #FF1493;" data-color="#FF1493"></div>
+                <div class="color-btn" style="background: #8A2BE2;" data-color="#8A2BE2"></div>
+                <div class="color-btn" style="background: #32CD32;" data-color="#32CD32"></div>
+                <div class="color-btn" style="background: #00CED1;" data-color="#00CED1"></div>
+                <div class="color-btn" style="background: #FFFFFF;" data-color="#FFFFFF"></div>
+            </div>
+            
+            <canvas id="drawingCanvas" width="600" height="400"></canvas>
+            
+            <div class="canvas-controls">
+                <button class="control-btn" onclick="clearCanvas()">Clear</button>
+                <button class="control-btn" onclick="drawTemplate()">Template</button>
+                <button class="control-btn" onclick="saveDrawing()">Save</button>
+                <input type="range" id="brushSize" min="1" max="20" value="3" style="margin: 0 10px;">
+                <span style="color: #FFD700;">Brush Size</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upload Tool Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('uploadModal')">&times;</span>
+            <h2 style="color: #FFD700; text-align: center; margin-bottom: 20px;">📁 Upload Kolam Image</h2>
+            
+            <div class="upload-area" id="uploadArea">
+                <p>Drag & drop your Kolam image here or click to browse</p>
+                <p style="font-size: 14px; margin-top: 10px; opacity: 0.7;">Supported formats: JPG, PNG, GIF</p>
+            </div>
+            
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+            
+            <div id="imagePreview" style="text-align: center; margin-top: 20px;"></div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="control-btn" onclick="analyzeImage()" id="analyzeBtn" style="display: none;">Analyze Pattern</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Generate Tool Modal -->
+    <div id="generateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('generateModal')">&times;</span>
+            <h2 style="color: #FFD700; text-align: center; margin-bottom: 20px;">✨ Generate Kolam from Text</h2>
+            
+            <input type="text" class="text-input" id="promptInput" placeholder="Describe your Kolam (e.g., 'Lotus flower with 8 petals in golden color')">
+            
+            <div class="canvas-controls">
+                <button class="control-btn" onclick="generateKolam()">Generate</button>
+                <button class="control-btn" onclick="addComplexity()">Add Complexity</button>
+                <button class="control-btn" onclick="randomPattern()">Random Pattern</button>
+            </div>
+            
+            <canvas id="generatedCanvas" width="600" height="400" style="border: 3px solid #FFD700; border-radius: 15px; display: block; margin: 20px auto;"></canvas>
+            
+            <div id="generationStatus" style="text-align: center; color: #FFD700; margin-top: 10px;"></div>
+        </div>
+    </div>
 
     <section id="heritage" class="heritage-section">
         <div class="heritage-content">
@@ -519,185 +764,282 @@
         </div>
     </section>
 
-    <section id="tools" class="tools-section">
-        <h2 class="section-title">Digital Kolam Tools</h2>
-        <p class="section-subtitle">
-            Bridging ancient tradition with modern technology to create, analyze, and preserve this beautiful art form.
-        </p>
-        
-        <div class="tools-grid">
-            <div class="tool-card">
-                <div class="tool-icon">🔍</div>
-                <h3 class="tool-title">Kolam Analyzer</h3>
-                <p class="tool-description">
-                    Upload your Kolam images for detailed analysis of patterns, symmetry, and traditional authenticity.
-                </p>
-                <ul class="tool-features">
-                    <li>Pattern recognition and classification</li>
-                    <li>Symmetry and geometry analysis</li>
-                    <li>Cultural significance insights</li>
-                    <li>Traditional vs modern style comparison</li>
-                    <li>Color palette and composition study</li>
-                </ul>
-                <button class="cta-button" onclick="openAnalyzer()">Launch Analyzer</button>
-            </div>
-            
-            <div class="tool-card">
-                <div class="tool-icon">✨</div>
-                <h3 class="tool-title">Kolam Generator</h3>
-                <p class="tool-description">
-                    Create stunning Kolam designs using AI-powered pattern generation and traditional motifs.
-                </p>
-                <ul class="tool-features">
-                    <li>AI-powered pattern creation</li>
-                    <li>Traditional motif library</li>
-                    <li>Customizable colors and sizes</li>
-                    <li>Festival-specific designs</li>
-                    <li>Step-by-step drawing guides</li>
-                </ul>
-                <button class="cta-button" onclick="openGenerator()">Start Creating</button>
-            </div>
-        </div>
-    </section>
-    
-    <section id="features" class="features-section">
-        <h2 class="section-title">Sacred Art Forms</h2>
-        <p class="section-subtitle">
-            Discover the rich tradition of Kolam - where every line tells a story, 
-            every pattern holds meaning, and every color celebrates life.
-        </p>
-        
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🌸</div>
-                <h3 class="feature-title">Traditional Patterns</h3>
-                <p class="feature-description">
-                    Authentic designs passed down through generations, each carrying 
-                    deep cultural significance and spiritual meaning.
-                </p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🎨</div>
-                <h3 class="feature-title">Vibrant Colors</h3>
-                <p class="feature-description">
-                    Rich hues that bring life to sacred geometry, using natural 
-                    and traditional pigments in stunning combinations.
-                </p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🕯️</div>
-                <h3 class="feature-title">Festival Celebrations</h3>
-                <p class="feature-description">
-                    Special designs for Diwali, Pongal, and other auspicious occasions, 
-                    bringing prosperity and joy to homes and hearts.
-                </p>
-            </div>
-        </div>
-    </section>
-
     <script>
-        let lastScrollY = 0;
-        let petalCount = 0;
-        
-        // Create floating petals for hero section
-        const petalsContainer = document.querySelector('.floating-petals');
-        for (let i = 0; i < 15; i++) {
-            const petal = document.createElement('div');
-            petal.className = 'petal';
-            petal.style.left = Math.random() * 100 + '%';
-            petal.style.animationDuration = (Math.random() * 10 + 10) + 's';
-            petal.style.animationDelay = Math.random() * 15 + 's';
-            petalsContainer.appendChild(petal);
-        }
-        
-        // Create falling petals on scroll
-        function createFallingPetal() {
-            if (petalCount > 20) return; // Limit active petals
+        // Initialize Three.js scene for the wireframe kolam
+        let scene, camera, renderer;
+        let kolamGeometry, kolamWireframe;
+        let animationId;
+
+        function initKolam3D() {
+            // Get the canvas element
+            const canvas = document.getElementById('kolam3d');
             
-            const fallingPetalsContainer = document.getElementById('falling-petals');
-            const petal = document.createElement('div');
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
             
-            const petalTypes = ['petal-red', 'petal-orange', 'petal-purple', 'petal-pink', 'petal-gold'];
-            const randomType = petalTypes[Math.floor(Math.random() * petalTypes.length)];
+            // Create camera
+            const aspectRatio = canvas.clientWidth / canvas.clientHeight;
+            camera = new THREE.PerspectiveCamera(75, aspectRatio, 0.1, 1000);
+            camera.position.z = 5;
             
-            petal.className = `falling-petal ${randomType}`;
-            petal.style.left = Math.random() * 100 + '%';
-            petal.style.animationDuration = (Math.random() * 2 + 3) + 's';
-            
-            fallingPetalsContainer.appendChild(petal);
-            petalCount++;
-            
-            // Remove petal after animation
-            setTimeout(() => {
-                if (petal.parentNode) {
-                    petal.parentNode.removeChild(petal);
-                    petalCount--;
-                }
-            }, 5000);
-        }
-        
-        // Handle scroll events
-        window.addEventListener('scroll', function() {
-            const currentScrollY = window.pageYOffset;
-            const scrollDelta = Math.abs(currentScrollY - lastScrollY);
-            
-            // Create petals based on scroll intensity
-            if (scrollDelta > 10) {
-                const petalIntensity = Math.min(Math.floor(scrollDelta / 50), 3);
-                for (let i = 0; i < petalIntensity; i++) {
-                    setTimeout(() => createFallingPetal(), i * 100);
-                }
-            }
-            
-            lastScrollY = currentScrollY;
-            
-            // Parallax effect
-            const mandala = document.querySelector('.mandala-bg');
-            const border = document.querySelector('.decorative-border');
-            
-            if (mandala && border) {
-                mandala.style.transform = `translate(-50%, -50%) rotate(${currentScrollY * 0.1}deg)`;
-                border.style.transform = `translate(-50%, -50%) rotate(${currentScrollY * -0.05}deg)`;
-            }
-        });
-        
-        // Smooth scrolling for buttons
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                alpha: true
             });
-        });
-        
-        // Tool functions
-        function openAnalyzer() {
-            // Create modal or redirect to analyzer page
-            alert('🔍 Kolam Analyzer\n\nFeatures coming soon:\n• Upload and analyze your Kolam patterns\n• AI-powered pattern recognition\n• Traditional authenticity scoring\n• Detailed geometry analysis');
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffd700, 1);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            const pointLight = new THREE.PointLight(0xff6b35, 1, 100);
+            pointLight.position.set(5, 5, 5);
+            scene.add(pointLight);
+            
+            // Create kolam geometry
+            createKolamGeometry();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Start animation
+            animate();
         }
         
-        function openGenerator() {
-            // Create modal or redirect to generator page
-            alert('✨ Kolam Generator\n\nFeatures coming soon:\n• AI-powered design creation\n• Traditional pattern library\n• Custom color palettes\n• Step-by-step tutorials');
-        }
-        
-        // Create additional falling petals periodically while scrolling
-        let scrollTimeout;
-        window.addEventListener('scroll', function() {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                if (Math.random() > 0.7) {
-                    createFallingPetal();
+        function createKolamGeometry() {
+            // Clear existing geometry if any
+            if (kolamGeometry) {
+                scene.remove(kolamGeometry);
+            }
+            
+            // Create a circular base for the kolam
+            const radius = 2;
+            const segments = 24;
+            
+            // Create a group to hold all kolam elements
+            kolamGeometry = new THREE.Group();
+            
+            // Create the circular base (dots pattern)
+            const dotGeometry = new THREE.BufferGeometry();
+            const dotPositions = [];
+            const dotColors = [];
+            
+            // Create dots in concentric circles
+            const dotCount = 100;
+            for (let i = 0; i < dotCount; i++) {
+                const angle = (i / dotCount) * Math.PI * 2;
+                const distance = radius * (0.2 + 0.8 * Math.random());
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                const z = 0;
+                
+                dotPositions.push(x, y, z);
+                
+                // Add color variation
+                const color = new THREE.Color();
+                color.setHSL(0.1, 1, 0.5 + Math.random() * 0.3);
+                dotColors.push(color.r, color.g, color.b);
+            }
+            
+            dotGeometry.setAttribute('position', new THREE.Float32BufferAttribute(dotPositions, 3));
+            dotGeometry.setAttribute('color', new THREE.Float32BufferAttribute(dotColors, 3));
+            
+            const dotMaterial = new THREE.PointsMaterial({
+                size: 0.1,
+                vertexColors: true,
+                sizeAttenuation: true
+            });
+            
+            const dots = new THREE.Points(dotGeometry, dotMaterial);
+            kolamGeometry.add(dots);
+            
+            // Create intricate kolam pattern using curves and lines
+            const lineMaterial = new THREE.LineBasicMaterial({
+                color: 0xffd700,
+                linewidth: 1
+            });
+            
+            // Create a traditional kolam pattern with multiple circles and connecting lines
+            const patternDetail = 5;
+            for (let i = 0; i < patternDetail; i++) {
+                const patternRadius = radius * (0.3 + (i / patternDetail) * 0.7);
+                const patternPoints = [];
+                
+                for (let j = 0; j <= 24; j++) {
+                    const angle = (j / 24) * Math.PI * 2;
+                    const x = Math.cos(angle) * patternRadius;
+                    const y = Math.sin(angle) * patternRadius;
+                    patternPoints.push(new THREE.Vector3(x, y, 0));
                 }
-            }, 200);
+                
+                const patternGeometry = new THREE.BufferGeometry().setFromPoints(patternPoints);
+                const patternLine = new THREE.Line(patternGeometry, lineMaterial);
+                kolamGeometry.add(patternLine);
+            }
+            
+            // Add connecting lines between circles
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const innerRadius = radius * 0.3;
+                const outerRadius = radius * 0.9;
+                
+                const innerX = Math.cos(angle) * innerRadius;
+                const innerY = Math.sin(angle) * innerRadius;
+                const outerX = Math.cos(angle) * outerRadius;
+                const outerY = Math.sin(angle) * outerRadius;
+                
+                const linePoints = [
+                    new THREE.Vector3(innerX, innerY, 0),
+                    new THREE.Vector3(outerX, outerY, 0)
+                ];
+                
+                const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
+                const line = new THREE.Line(lineGeometry, lineMaterial);
+                kolamGeometry.add(line);
+            }
+            
+            // Add decorative elements (petals or floral patterns)
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                const startRadius = radius * 0.7;
+                const endRadius = radius * 0.9;
+                
+                const startX = Math.cos(angle) * startRadius;
+                const startY = Math.sin(angle) * startRadius;
+                
+                // Create a petal shape
+                const petalPoints = [];
+                for (let j = 0; j <= 10; j++) {
+                    const petalAngle = (j / 10) * Math.PI * 0.5;
+                    const petalRadius = endRadius - startRadius;
+                    const x = startX + Math.cos(angle + petalAngle - Math.PI/4) * petalRadius;
+                    const y = startY + Math.sin(angle + petalAngle - Math.PI/4) * petalRadius;
+                    petalPoints.push(new THREE.Vector3(x, y, 0));
+                }
+                
+                const petalGeometry = new THREE.BufferGeometry().setFromPoints(petalPoints);
+                const petalLine = new THREE.Line(petalGeometry, lineMaterial);
+                kolamGeometry.add(petalLine);
+            }
+            
+            // Add the kolam to the scene
+            scene.add(kolamGeometry);
+        }
+        
+        function onWindowResize() {
+            const canvas = renderer.domElement;
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            
+            if (canvas.width !== width || canvas.height !== height) {
+                renderer.setSize(width, height, false);
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+            }
+        }
+        
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            // Rotate the kolam slowly
+            if (kolamGeometry) {
+                kolamGeometry.rotation.z += 0.001;
+                kolamGeometry.rotation.x += 0.0005;
+                kolamGeometry.rotation.y += 0.0005;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize the kolam when the page loads
+        window.addEventListener('load', function() {
+            initKolam3D();
+            createFallingPetals();
         });
+        
+        // Create falling petals animation
+        function createFallingPetals() {
+            const container = document.getElementById('falling-petals');
+            const petalTypes = ['petal-red', 'petal-orange', 'petal-purple', 'petal-pink', 'petal-gold'];
+            
+            for (let i = 0; i < 30; i++) {
+                const petal = document.createElement('div');
+                petal.classList.add('falling-petal');
+                petal.classList.add(petalTypes[Math.floor(Math.random() * petalTypes.length)]);
+                
+                // Random position and animation delay
+                petal.style.left = `${Math.random() * 100}%`;
+                petal.style.animationDelay = `${Math.random() * 4}s`;
+                
+                container.appendChild(petal);
+            }
+        }
+        
+        // Modal functions
+        function openDrawTool() {
+            document.getElementById('drawModal').style.display = 'flex';
+            initDrawingCanvas();
+        }
+        
+        function openUploadTool() {
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+        
+        function openGenerateTool() {
+            document.getElementById('generateModal').style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function initDrawingCanvas() {
+            // This would initialize the drawing canvas
+            console.log("Drawing canvas initialized");
+        }
+        
+        function clearCanvas() {
+            // This would clear the drawing canvas
+            console.log("Canvas cleared");
+        }
+        
+        function drawTemplate() {
+            // This would draw a kolam template
+            console.log("Template drawn");
+        }
+        
+        function saveDrawing() {
+            // This would save the drawing
+            console.log("Drawing saved");
+        }
+        
+        function analyzeImage() {
+            // This would analyze an uploaded image
+            console.log("Image analyzed");
+        }
+        
+        function generateKolam() {
+            // This would generate a kolam from text
+            console.log("Kolam generated from text");
+        }
+        
+        function addComplexity() {
+            // This would add complexity to the generated kolam
+            console.log("Complexity added");
+        }
+        
+        function randomPattern() {
+            // This would generate a random pattern
+            console.log("Random pattern generated");
+        }
     </script>
 </body>
 </html>
